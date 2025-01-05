@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 69756479}
   - component: {fileID: 69756478}
   - component: {fileID: 69756482}
-  - component: {fileID: 69756481}
+  - component: {fileID: 69756483}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -213,26 +213,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &69756481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 69756477}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9b4330508c9e44e082655cd06ea60b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  asset: {fileID: 5022602860645237092, guid: 5de5c5c68a776489eb7379efb6cfba49, type: 3}
-  labelsAsset: {fileID: 4900000, guid: 6af53dfb1cabe4463b3117c873f913a8, type: 3}
-  displayImage: {fileID: 1089410590}
-  borderSprite: {fileID: 0}
-  borderTexture: {fileID: 2800000, guid: cc41f2bc1c77d4c459bcfb1bce15e3b4, type: 3}
-  font: {fileID: 0}
-  iouThreshold: 0.5
-  scoreThreshold: 0.5
 --- !u!114 &69756482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,6 +257,28 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &69756483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69756477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 031a797ef28df4d11a92837e772935e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isYoutubeShort: 0
+  asset: {fileID: 5022602860645237092, guid: 5de5c5c68a776489eb7379efb6cfba49, type: 3}
+  labelsAsset: {fileID: 4900000, guid: 6af53dfb1cabe4463b3117c873f913a8, type: 3}
+  inputRenderTexture: {fileID: 8400000, guid: 46f39e2deb27a410c833a96323c7a848, type: 2}
+  resultImage: {fileID: 1089410590}
+  borderSprite: {fileID: 0}
+  borderTexture: {fileID: 2800000, guid: cc41f2bc1c77d4c459bcfb1bce15e3b4, type: 3}
+  font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  iouThreshold: 0.5
+  scoreThreshold: 0.5
 --- !u!1 &530580219
 GameObject:
   m_ObjectHideFlags: 0
@@ -557,7 +559,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 0}
+  m_Texture: {fileID: 8400000, guid: 46f39e2deb27a410c833a96323c7a848, type: 2}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -572,6 +574,72 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1089410588}
   m_CullTransparentMesh: 1
+--- !u!1 &1128436366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1128436369}
+  - component: {fileID: 1128436368}
+  - component: {fileID: 1128436367}
+  m_Layer: 0
+  m_Name: NDI Receiver
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1128436367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128436366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 552ce9ea47d6f45a0b0690c36815a5c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _ndiReceiver: {fileID: 1128436368}
+  _lut: {fileID: 8534537815417165676, guid: 244beb38c4aca46d38429ea743939884, type: 3}
+  _colorDecoder: {fileID: -876546973899608171, guid: 74957781651b549b3998e2eb3edf1d05, type: 3}
+  _depthDecoder: {fileID: -876546973899608171, guid: b31475ba2b6b74d8c98632edce07acbc, type: 3}
+--- !u!114 &1128436368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128436366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a09ab5fc64402d49b12d170a7577986, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _ndiName: LOCALHOST (NDI Sender)
+  _targetTexture: {fileID: 8400000, guid: 46f39e2deb27a410c833a96323c7a848, type: 2}
+  _targetRenderer: {fileID: 0}
+  _targetMaterialProperty: 
+  _resources: {fileID: 11400000, guid: 69304b86950074db7ba8caba75214004, type: 2}
+--- !u!4 &1128436369
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128436366}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1954502814
 GameObject:
   m_ObjectHideFlags: 0
@@ -659,3 +727,4 @@ SceneRoots:
   - {fileID: 530580221}
   - {fileID: 971950541}
   - {fileID: 1954502817}
+  - {fileID: 1128436369}

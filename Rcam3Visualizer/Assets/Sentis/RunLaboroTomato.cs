@@ -2,7 +2,6 @@
 using Unity.Sentis;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 using Lays = Unity.Sentis.Layers;
 using System.IO;
 using FF = Unity.Sentis.Functional;
@@ -26,11 +25,11 @@ public class RunLaboroTomato : MonoBehaviour
 {
     // Drag the yolov8n.sentis file here
     public ModelAsset asset;
-    const string modelName = "laboro_tomato_yolov8.sentis";
-    // Change this to the name of the video you put in StreamingAssets folder:
-    const string videoName = "tomatoes.mp4";
     // Link the classes.txt here:
     public TextAsset labelsAsset;
+    // Image to feed into the model
+    public RenderTexture inputRenderTexture;
+
     // Create a Raw Image in the scene and link it here:
     public RawImage displayImage;
     // Link to a bounding box sprite or texture here:
@@ -54,8 +53,6 @@ public class RunLaboroTomato : MonoBehaviour
     //The number of classes in the model
     private const int numClasses = 80;
 
-    private VideoPlayer video;
-
     List<GameObject> boxPool = new();
 
     [SerializeField, Range(0, 1)] float iouThreshold = 0.5f;
@@ -73,11 +70,9 @@ public class RunLaboroTomato : MonoBehaviour
         public string label;
     }
 
-
     void Start()
     {
         Application.targetFrameRate = 60;
-        Screen.orientation = ScreenOrientation.LandscapeLeft;
 
         //Parse neural net labels
         labels = labelsAsset.text.Split('\n');
@@ -86,10 +81,8 @@ public class RunLaboroTomato : MonoBehaviour
 
         targetRT = new RenderTexture(imageWidth, imageHeight, 0);
 
-        //Create image to display video
+        //Create image to display output
         displayLocation = displayImage.transform;
-
-        SetupInput();
 
         if (borderSprite == null)
         {
@@ -100,7 +93,6 @@ public class RunLaboroTomato : MonoBehaviour
     {
 
         //Load model
-        //var model1 = ModelLoader.Load(Path.Join(Application.streamingAssetsPath, modelName));
         var model1 = ModelLoader.Load(asset);
 
         centersToCorners = new TensorFloat(new TensorShape(4, 4),
@@ -135,16 +127,6 @@ public class RunLaboroTomato : MonoBehaviour
         engine = WorkerFactory.CreateWorker(backend, model2);
     }
 
-    void SetupInput()
-    {
-        video = gameObject.AddComponent<VideoPlayer>();
-        video.renderMode = VideoRenderMode.APIOnly;
-        video.source = VideoSource.Url;
-        video.url = Path.Join(Application.streamingAssetsPath, videoName);
-        video.isLooping = true;
-        video.Play();
-    }
-
     private void Update()
     {
         ExecuteML();
@@ -154,15 +136,9 @@ public class RunLaboroTomato : MonoBehaviour
     {
         ClearAnnotations();
 
-        if (video && video.texture)
-        {
-            float aspect = video.width * 1f / video.height;
-            Graphics.Blit(video.texture, targetRT, new Vector2(1f / aspect, 1), new Vector2(0, 0));
-            displayImage.texture = targetRT;
-        }
-        else return;
+        if (!inputRenderTexture) return;
 
-        using var input = TextureConverter.ToTensor(targetRT, imageWidth, imageHeight, 3);
+        using var input = TextureConverter.ToTensor(inputRenderTexture, imageWidth, imageHeight, 3);
         engine.Execute(input);
 
         var output = engine.PeekOutput("output_0") as TensorFloat;
@@ -170,7 +146,6 @@ public class RunLaboroTomato : MonoBehaviour
 
         output.CompleteOperationsAndDownload();
         labelIDs.CompleteOperationsAndDownload();
-
 
         float displayWidth = displayImage.rectTransform.rect.width;
         float displayHeight = displayImage.rectTransform.rect.height;
@@ -214,10 +189,31 @@ public class RunLaboroTomato : MonoBehaviour
         RectTransform rt = panel.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(box.width, box.height);
 
+        var col = GetBoxColor(box.label);
+
         //Set label text
         var label = panel.GetComponentInChildren<Text>();
         label.text = box.label;
         label.fontSize = (int)fontSize;
+        label.color = col;
+
+        //Set color
+        var img = panel.GetComponentInChildren<Image>();
+        img.color = col;
+    }
+
+    private Color GetBoxColor(string label)
+    {
+        if(label == "b_green" || label == "l_green")
+        {
+            return Color.green;
+        }
+        if(label == "b_half_ripened" || label == "l_half_ripened")
+        {
+            return Color.yellow;
+        }
+
+        return Color.red;
     }
 
     public GameObject CreateNewBox(Color color)
@@ -227,7 +223,6 @@ public class RunLaboroTomato : MonoBehaviour
         var panel = new GameObject("ObjectBox");
         panel.AddComponent<CanvasRenderer>();
         Image img = panel.AddComponent<Image>();
-        img.color = color;
         img.sprite = borderSprite;
         img.type = Image.Type.Sliced;
         panel.transform.SetParent(displayLocation, false);
