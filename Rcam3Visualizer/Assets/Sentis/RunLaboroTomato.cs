@@ -125,11 +125,13 @@ public class RunLaboroTomato : MonoBehaviour
 
         //Create engine to run model
         engine = WorkerFactory.CreateWorker(backend, model2);
+
+        InvokeRepeating("ExecuteML", 1f, 1f); // Start after 1 second, repeat every 1 second
     }
 
     private void Update()
     {
-        ExecuteML();
+        //ExecuteML();
     }
 
     public void ExecuteML()
