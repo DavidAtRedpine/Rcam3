@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using Lays = Unity.Sentis.Layers;
 using System.IO;
 using FF = Unity.Sentis.Functional;
+using Mono.Cecil;
 
 /*
  *  LaboroTomato (made with YoloV8) Inference Script
@@ -21,37 +22,35 @@ using FF = Unity.Sentis.Functional;
  */
 
 
+[RequireComponent(typeof(ApplyMultipleBoxesShader))]
 public class RunLaboroTomato : MonoBehaviour
 {
     // Drag the yolov8n.sentis file here
     public ModelAsset asset;
     // Link the classes.txt here:
     public TextAsset labelsAsset;
-    // Image to feed into the model
-    public RenderTexture inputRenderTexture;
 
     // Create a Raw Image in the scene and link it here:
-    public RawImage displayImage;
+    public RawImage inputImage;
+    public RectTransform displayLocation; //transform to put the boxes into
     // Link to a bounding box sprite or texture here:
     public Sprite borderSprite;
     public Texture2D borderTexture;
     // Link to the font for the labels:
     public Font font;
 
+    private ApplyMultipleBoxesShader boxShader;
+
     const BackendType backend = BackendType.GPUCompute;
 
-    private Transform displayLocation;
+    
     private IWorker engine;
     private string[] labels;
-    private RenderTexture targetRT;
 
 
     //Image size for the model
     private const int imageWidth = 640;
     private const int imageHeight = 640;
-
-    //The number of classes in the model
-    private const int numClasses = 80;
 
     List<GameObject> boxPool = new();
 
@@ -72,6 +71,8 @@ public class RunLaboroTomato : MonoBehaviour
 
     void Start()
     {
+        boxShader = GetComponent<ApplyMultipleBoxesShader>();
+
         Application.targetFrameRate = 60;
 
         //Parse neural net labels
@@ -79,10 +80,8 @@ public class RunLaboroTomato : MonoBehaviour
 
         LoadModel();
 
-        targetRT = new RenderTexture(imageWidth, imageHeight, 0);
-
         //Create image to display output
-        displayLocation = displayImage.transform;
+        //displayLocation = displayImage.transform;
 
         if (borderSprite == null)
         {
@@ -126,7 +125,7 @@ public class RunLaboroTomato : MonoBehaviour
         //Create engine to run model
         engine = WorkerFactory.CreateWorker(backend, model2);
 
-        InvokeRepeating("ExecuteML", 1f, 1f); // Start after 1 second, repeat every 1 second
+        InvokeRepeating("ExecuteML", 1f, 0.5f); // Start after 1 second, repeat every 0.5 seconds
     }
 
     private void Update()
@@ -137,6 +136,8 @@ public class RunLaboroTomato : MonoBehaviour
     public void ExecuteML()
     {
         ClearAnnotations();
+
+        var inputRenderTexture = inputImage.mainTexture;
 
         if (!inputRenderTexture) return;
 
@@ -149,20 +150,37 @@ public class RunLaboroTomato : MonoBehaviour
         output.CompleteOperationsAndDownload();
         labelIDs.CompleteOperationsAndDownload();
 
-        float displayWidth = displayImage.rectTransform.rect.width;
-        float displayHeight = displayImage.rectTransform.rect.height;
+        float displayWidth = inputImage.rectTransform.rect.width;
+        float displayHeight = inputImage.rectTransform.rect.height;
 
         float scaleX = displayWidth / imageWidth;
         float scaleY = displayHeight / imageHeight;
 
         int boxesFound = output.shape[0];
+
+        boxShader.boxes = new List<ApplyMultipleBoxesShader.Box>();
         //Draw the bounding boxes
         for (int n = 0; n < Mathf.Min(boxesFound, maxOutputBoxes); n++)
         {
+            //220.4015 142.0255
+            var width = output[n, 2] / imageWidth;
+            var height = output[n, 3] / imageHeight;
+            var minX = output[n, 0] / imageWidth - width / 2;
+            var maxX = minX + width;
+            var minY = 1 - (output[n, 1] / imageHeight) - height / 2;
+            var maxY = minY + height;
+            var shaderBox = new ApplyMultipleBoxesShader.Box();
+            shaderBox.min = new Vector2(minX, minY);
+            shaderBox.max = new Vector2(maxX, maxY);
+            boxShader.boxes.Add(shaderBox);
             var box = new BoundingBox
             {
-                centerX = output[n, 0] * scaleX - displayWidth / 2,
-                centerY = output[n, 1] * scaleY - displayHeight / 2,
+                centerX = -displayLocation.rect.width + output[n, 0] * scaleX,
+                //centerX = 0,
+                //centerX = -displayWidth + (output[n, 0] / imageWidth) * displayWidth,
+                //centerY = output[n, 1] * scaleY - displayHeight / 2,
+                //centerY = 0,
+                centerY = -displayLocation.rect.height + output[n, 1] * scaleY,
                 width = output[n, 2] * scaleX,
                 height = output[n, 3] * scaleY,
                 label = labels[labelIDs[n]],

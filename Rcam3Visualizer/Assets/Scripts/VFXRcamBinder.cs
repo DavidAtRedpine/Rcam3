@@ -24,8 +24,8 @@ public sealed class RcamBinder : VFXBinderBase
 
     public override bool IsValid(VisualEffect component)
       => Target != null &&
-         component.HasTexture(ColorMapProperty) &&
-         component.HasTexture(DepthMapProperty) &&
+         //component.HasTexture(ColorMapProperty) &&
+         //component.HasTexture(DepthMapProperty) &&
          component.HasVector4(InverseProjectionProperty) &&
          component.HasMatrix4x4(InverseViewProperty);
 
@@ -34,8 +34,15 @@ public sealed class RcamBinder : VFXBinderBase
         if (Target.ColorTexture == null) return;
         var inv_proj = CameraUtil.GetInverseProjection(Target.Metadata);
         var inv_view = CameraUtil.GetInverseView(Target.Metadata);
-        component.SetTexture(ColorMapProperty, Target.ColorTexture);
-        component.SetTexture(DepthMapProperty, Target.DepthTexture);
+        if(component.HasTexture(ColorMapProperty))
+        {
+          component.SetTexture(ColorMapProperty, Target.ColorTexture);
+        }
+        if(component.HasTexture(DepthMapProperty))
+        {
+          component.SetTexture(DepthMapProperty, Target.DepthTexture);
+        }
+        
         component.SetVector4(InverseProjectionProperty, inv_proj);
         component.SetMatrix4x4(InverseViewProperty, inv_view);
     }

@@ -21,6 +21,8 @@ public sealed class FrameDecoder : MonoBehaviour
 
     #region Public accessor properties
 
+    public RenderTexture OriginalTexture => _decoded.original;
+
     public RenderTexture ColorTexture => _decoded.color;
     public RenderTexture DepthTexture => _decoded.depth;
     public ref readonly Metadata Metadata => ref _metadata;
@@ -29,7 +31,7 @@ public sealed class FrameDecoder : MonoBehaviour
 
     #region Private members
 
-    (RenderTexture color, RenderTexture depth) _decoded;
+    (RenderTexture original, RenderTexture color, RenderTexture depth) _decoded;
     Metadata _metadata = Metadata.InitialData;
 
     #endregion
@@ -41,6 +43,7 @@ public sealed class FrameDecoder : MonoBehaviour
 
     void OnDestroy()
     {
+        Destroy(_decoded.original);
         Destroy(_decoded.color);
         Destroy(_decoded.depth);
     }
@@ -76,18 +79,25 @@ public sealed class FrameDecoder : MonoBehaviour
 
         // Parameters from metadata
         _depthDecoder.SetVector(ShaderID.DepthRange, _metadata.DepthRange);
+        //_depthDecoder.SetVector(ShaderID.DepthRange, new Vector2(0.01f, 1));
+
+        Graphics.Blit(source, _decoded.original);
 
         // Decoder invocation blit
         Graphics.Blit(source, _decoded.color, _colorDecoder);
+        //Graphics.Blit(source, _decoded.color);
         Graphics.Blit(source, _decoded.depth, _depthDecoder);
+        //Graphics.Blit(source, _decoded.depth);
     }
 
     void AllocatePlanes(RenderTexture source)
     {
         var w = source.width / 2;
         var h = source.height / 2;
+        _decoded.original = new RenderTexture(w * 2, h * 2, 0);
         _decoded.color = new RenderTexture(w, h * 2, 0);
         _decoded.depth = new RenderTexture(w, h, 0, RenderTextureFormat.RHalf);
+        _decoded.original.wrapMode = TextureWrapMode.Clamp;
         _decoded.color.wrapMode = TextureWrapMode.Clamp;
         _decoded.depth.wrapMode = TextureWrapMode.Clamp;
     }
